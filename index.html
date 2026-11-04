@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SY AI Assistant</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101322;color:white;font-family:Arial}
+header{padding:20px;background:#191e35;text-align:center}
+header h2{color:#8c9cff}
+.container{max-width:600px;margin:20px auto;padding:15px}
+.card{background:#1b2138;padding:18px;border-radius:15px;margin-bottom:15px}
+select,textarea,button{width:100%;padding:13px;margin-top:10px;border:0;border-radius:9px;font-size:15px}
+select,textarea{background:#292f49;color:white}
+button{background:#687cff;color:white;font-weight:bold}
+#chat{height:350px;overflow:auto}
+.msg{padding:12px;margin:10px 0;background:#303957;border-radius:10px;white-space:pre-wrap}
+.user{background:#4656a0}
+small{color:#aab1cc}
+</style>
+</head>
+<body>
+<header>
+<h2>SY AI ASSISTANT</h2>
+<small>GPT + Gemini Personal AI</small>
+</header>
+
+<div class="container">
+<div class="card">
+<h3>AI Settings</h3>
+<select id="model">
+<option value="gemini">Google Gemini</option>
+<option value="gpt">OpenAI GPT</option>
+</select>
+<select id="language">
+<option>Hindi</option>
+<option>English</option>
+<option>Hinglish</option>
+</select>
+</div>
+
+<div class="card">
+<h3>AI Chat</h3>
+<div id="chat">
+<div class="msg">Namaste! Main SY AI hoon. Aap kya poochna chahte hain?</div>
+</div>
+<textarea id="question" placeholder="Apna message likho..."></textarea>
+<button onclick="sendMessage()">Send Message</button>
+</div>
+
+<div class="card">
+<h3>Instagram Automation</h3>
+<p id="status">Instagram: Not Connected</p>
+<button onclick="alert('Instagram API connection abhi setup hona baki hai.')">Connect Instagram</button>
+</div>
+</div>
+
+<script>
+function sendMessage(){
+let q=document.getElementById('question').value.trim();
+if(!q)return;
+let chat=document.getElementById('chat');
+let user=document.createElement('div');
+user.className='msg user';
+user.textContent='You: '+q;
+chat.appendChild(user);
+let reply=document.createElement('div');
+reply.className='msg';
+reply.textContent='AI API abhi connect nahi hui hai. API connection ke baad main jawab dunga.';
+chat.appendChild(reply);
+document.getElementById('question').value='';
+chat.scrollTop=chat.scrollHeight;
+}
+</script>
+</body>
+</html>
