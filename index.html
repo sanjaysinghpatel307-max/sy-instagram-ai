@@ -399,6 +399,84 @@ input.addEventListener("keydown", function(event) {
 });
 
 loadHistory();
+  // SY AI Voice Input and Hindi Voice Reply
+
+const micBtn = document.createElement("button");
+micBtn.type = "button";
+micBtn.textContent = "🎤";
+micBtn.title = "Speak";
+micBtn.style.cssText =
+  "padding:10px 14px;border-radius:10px;border:1px solid #555;background:#222;color:white;font-size:18px;";
+
+input.insertAdjacentElement("afterend", micBtn);
+
+const SpeechRecognition =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
+
+let recognition = null;
+
+if (SpeechRecognition) {
+  recognition = new SpeechRecognition();
+  recognition.lang = "hi-IN";
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  recognition.onstart = () => {
+    micBtn.textContent = "🔴";
+  };
+
+  recognition.onend = () => {
+    micBtn.textContent = "🎤";
+  };
+
+  recognition.onresult = (event) => {
+    input.value = event.results[0][0].transcript;
+    input.focus();
+  };
+
+  recognition.onerror = () => {
+    micBtn.textContent = "🎤";
+    alert("Voice input error. Please try again.");
+  };
+
+  micBtn.addEventListener("click", () => {
+    recognition.start();
+  });
+} else {
+  micBtn.disabled = true;
+  micBtn.title = "Speech recognition not supported";
+}
+
+// Speak new AI replies
+const voiceObserver = new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    mutation.addedNodes.forEach((node) => {
+      if (node.nodeType === 1) {
+        const messages = [];
+
+        if (node.matches?.(".msg.ai")) messages.push(node);
+        node.querySelectorAll?.(".msg.ai").forEach(el => messages.push(el));
+
+        messages.forEach((el) => {
+          const text = el.innerText.trim();
+          if (!text || !window.speechSynthesis) return;
+
+          window.speechSynthesis.cancel();
+
+          const speech = new SpeechSynthesisUtterance(text);
+          speech.lang = "hi-IN";
+          speech.rate = 1;
+          window.speechSynthesis.speak(speech);
+        });
+      }
+    });
+  });
+});
+
+voiceObserver.observe(chat, {
+  childList: true,
+  subtree: true
+});
 </script>
 
 </body>
