@@ -47,9 +47,10 @@ footer{text-align:center;padding:20px;color:#888;font-size:12px}
 </head>
 
 <body>
+
 <header>
 <h2>SY AI ASSISTANT</h2>
-<small>Personal AI • Gemini + GPT • Female Assistant</small>
+<small>Gemini + GPT • ElevenLabs Female Voice</small>
 </header>
 
 <main class="container">
@@ -75,30 +76,10 @@ footer{text-align:center;padding:20px;color:#888;font-size:12px}
 </div>
 </div>
 
-<label>Female Voice Selection</label>
-<select id="voiceSelect">
-<option value="">Loading voices...</option>
+<label>Voice</label>
+<select id="voiceType">
+<option value="elevenlabs">ElevenLabs Natural Female Voice</option>
 </select>
-
-<div class="row">
-<div>
-<label>Voice Speed</label>
-<select id="voiceRate">
-<option value="0.80">Slow</option>
-<option value="0.90" selected>Soft & Normal</option>
-<option value="1">Normal</option>
-<option value="1.10">Fast</option>
-</select>
-</div>
-<div>
-<label>Voice Pitch</label>
-<select id="voicePitch">
-<option value="1">Normal</option>
-<option value="1.10" selected>Soft Female</option>
-<option value="1.20">High</option>
-</select>
-</div>
-</div>
 
 <div class="row" style="margin-top:10px">
 <button class="secondary" id="testVoice">🔊 Test Female Voice</button>
@@ -112,7 +93,7 @@ footer{text-align:center;padding:20px;color:#888;font-size:12px}
 </select>
 
 <p class="status" id="connection">● Connecting...</p>
-<p class="hint">फोन में उपलब्ध आवाज़ों में से Hindi Female जैसी आवाज़ चुनें। असली महिला आवाज़ तभी मिलेगी जब फोन में ऐसी voice उपलब्ध हो।</p>
+<p class="hint">Natural Female Voice powered by ElevenLabs.</p>
 </section>
 
 <section class="card">
@@ -147,7 +128,7 @@ footer{text-align:center;padding:20px;color:#888;font-size:12px}
 <button class="secondary" id="exportBtn">Export Chat</button>
 </div>
 
-<p class="status" id="voiceStatus">Voice ready</p>
+<p class="status" id="voiceStatus">ElevenLabs Voice ready</p>
 </section>
 
 <section class="card">
@@ -163,7 +144,7 @@ footer{text-align:center;padding:20px;color:#888;font-size:12px}
 <section class="card">
 <h3>Instagram Automation</h3>
 <p class="status">Instagram: Meta setup pending</p>
-<p class="hint">Instagram DM, comments और insights के लिए Meta Developer App, permissions, webhook और access token जरूरी हैं।</p>
+<p class="hint">Instagram DM और comments के लिए Meta Developer App, permissions, webhook और access token जरूरी हैं।</p>
 <button class="secondary" id="instagramInfo">Instagram Setup Information</button>
 </section>
 
@@ -179,168 +160,185 @@ const chat=$("chat");
 const input=$("question");
 
 let currentMessages=[];
-let savedChats=JSON.parse(localStorage.getItem("sy_ai_chats")||"[]");
+let savedChats=[];
+
+try{
+savedChats=JSON.parse(localStorage.getItem("sy_ai_chats")||"[]");
+if(!Array.isArray(savedChats))savedChats=[];
+}catch(e){
+savedChats=[];
+}
+
 let selectedImage=null;
 let handsFree=false;
 let isListening=false;
 let recognition=null;
-let availableVoices=[];
+let currentAudio=null;
+let currentAudioUrl=null;
+let speechRequest=0;
 
-const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+const SpeechRecognition=
+window.SpeechRecognition||window.webkitSpeechRecognition;
 
 // FEMALE ASSISTANT PERSONALITY
-const FEMALE_INSTRUCTION = `
-You are SY AI Assistant, a friendly and helpful female AI assistant.
 
-IMPORTANT GENDER RULE:
-Always speak about yourself using feminine grammatical forms.
+const FEMALE_INSTRUCTION=`
+You are SY AI, a friendly and helpful female AI assistant.
+
+Always refer to yourself using feminine grammatical forms.
 
 Hindi examples:
-- मैं कर सकती हूँ।
-- मैं समझ गई।
-- मैं बता सकती हूँ।
-- मैं आपकी मदद करूँगी।
-- मैं तैयार हूँ।
-- मैंने समझ लिया है।
-- मैं कोशिश करूँगी।
+मैं कर सकती हूँ।
+मैं समझ गई।
+मैं बता सकती हूँ।
+मैं आपकी मदद करूँगी।
+मैं तैयार हूँ।
+मैं कोशिश करूँगी।
 
-Never use masculine self-references such as:
-- मैं कर सकता हूँ।
-- मैं समझ गया।
-- मैं बताऊँगा।
-- मैं करूँगा।
+Never use masculine self references such as:
+मैं कर सकता हूँ।
+मैं समझ गया।
+मैं बताऊँगा।
+मैं करूँगा।
 
-In Hinglish, use feminine expressions:
-- Main kar sakti hoon.
-- Main samajh gayi.
-- Main bata sakti hoon.
-- Main madad karungi.
+In Hinglish use:
+Main kar sakti hoon.
+Main samajh gayi.
+Main bata sakti hoon.
+Main madad karungi.
 
 In English, speak naturally as a friendly female assistant.
-Do not unnecessarily mention that you are an AI.
-Keep your answers natural, polite, warm and helpful.
-Always follow the user's selected language.
-Do not change the user's gender. Feminine grammar applies only to yourself.
+
+This feminine grammar applies only to yourself.
+Do not change the user's gender.
+Be warm, natural, polite and helpful.
 `;
 
 // STATUS
+
 function setStatus(text){
 $("connection").textContent=text;
 }
 
-// VOICE LOADING
-function loadVoices(){
-if(!("speechSynthesis" in window))return;
+// ELEVENLABS AUDIO STOP
 
-availableVoices=speechSynthesis.getVoices();
-if(!availableVoices.length)return;
+function stopAudio(){
+speechRequest++;
 
-const select=$("voiceSelect");
-const previous=localStorage.getItem("sy_ai_voice")||"";
+if(currentAudio){
+currentAudio.pause();
+currentAudio.currentTime=0;
+currentAudio=null;
+}
 
-select.innerHTML="";
+if(currentAudioUrl){
+URL.revokeObjectURL(currentAudioUrl);
+currentAudioUrl=null;
+}
+}
 
-const hindiVoices=availableVoices.filter(v=>
-v.lang.toLowerCase().startsWith("hi")
-);
+// ELEVENLABS NATURAL FEMALE VOICE
 
-const otherVoices=availableVoices.filter(v=>
-!v.lang.toLowerCase().startsWith("hi")
-);
+async function speakText(text){
 
-const voices=[...hindiVoices,...otherVoices];
+if(!text || !text.trim())return;
 
-voices.forEach(v=>{
-const option=document.createElement("option");
-option.value=v.name;
-option.textContent=v.name+" ("+v.lang+")";
-select.appendChild(option);
+stopAudio();
+
+const thisRequest=speechRequest;
+
+$("voiceStatus").textContent="🎙 Natural Female Voice Loading...";
+
+try{
+
+const response=await fetch(API_URL,{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+action:"tts",
+text:text
+})
 });
 
-let chosen=voices.find(v=>v.name===previous);
+if(!response.ok){
 
-if(!chosen){
-chosen=hindiVoices.find(v=>
-/female|swara|kalpana|heera|priya|lekha/i.test(v.name)
-);
+let errorMessage="ElevenLabs API Error";
+
+try{
+const data=await response.json();
+errorMessage=data.error||errorMessage;
+}catch(e){}
+
+throw new Error(errorMessage);
 }
 
-if(!chosen)chosen=hindiVoices[0]||voices[0];
+const audioBlob=await response.blob();
 
-if(chosen)select.value=chosen.name;
+if(thisRequest!==speechRequest)return;
 
-localStorage.setItem("sy_ai_voice",select.value);
+if(!audioBlob.type.includes("audio")){
+throw new Error("Audio response nahi mila.");
 }
 
-if("speechSynthesis" in window){
-loadVoices();
-speechSynthesis.onvoiceschanged=loadVoices;
-}
+currentAudioUrl=URL.createObjectURL(audioBlob);
+currentAudio=new Audio(currentAudioUrl);
 
-$("voiceSelect").onchange=()=>{
-localStorage.setItem("sy_ai_voice",$("voiceSelect").value);
-};
-
-function getSelectedVoice(){
-const name=$("voiceSelect").value;
-return availableVoices.find(v=>v.name===name)||null;
-}
-
-// VOICE PLAYBACK
-function speakText(text){
-if(!("speechSynthesis" in window)){
-$("voiceStatus").textContent="Voice supported nahi hai.";
-return;
-}
-
-speechSynthesis.cancel();
-
-const speech=new SpeechSynthesisUtterance(text);
-const voice=getSelectedVoice();
-
-if(voice){
-speech.voice=voice;
-speech.lang=voice.lang;
-}else{
-speech.lang=$("language").value==="English"?"en-IN":"hi-IN";
-}
-
-speech.rate=Number($("voiceRate").value)||0.9;
-speech.pitch=Number($("voicePitch").value)||1.1;
-speech.volume=1;
-
-speech.onstart=()=>{
+currentAudio.onplay=()=>{
 $("voiceStatus").textContent="🔊 SY AI बोल रही है...";
 };
 
-speech.onend=()=>{
-$("voiceStatus").textContent="Voice ready";
+currentAudio.onended=()=>{
+$("voiceStatus").textContent="ElevenLabs Voice ready";
+
+if(currentAudioUrl){
+URL.revokeObjectURL(currentAudioUrl);
+currentAudioUrl=null;
+}
+
+currentAudio=null;
+
 if(handsFree)startListening();
 };
 
-speech.onerror=()=>{
-$("voiceStatus").textContent="Voice error";
+currentAudio.onerror=()=>{
+$("voiceStatus").textContent="Audio playback error";
 };
 
-speechSynthesis.speak(speech);
+await currentAudio.play();
+
+}catch(error){
+
+$("voiceStatus").textContent="Voice Error: "+error.message;
+console.error(error);
+
+}
 }
 
 // TEST VOICE
-$("testVoice").onclick=()=>{
-const lang=$("language").value;
-let test="नमस्ते! मैं आपकी SY AI Assistant हूँ। मैं आपकी मदद कर सकती हूँ।";
 
-if(lang==="English"){
-test="Hello! I am your SY AI Assistant. I am happy to help you.";
-}else if(lang==="Hinglish"){
-test="Namaste! Main aapki SY AI Assistant hoon. Main aapki madad kar sakti hoon.";
+$("testVoice").onclick=()=>{
+
+const language=$("language").value;
+
+let text="नमस्ते! मैं आपकी SY AI Assistant हूँ। मैं आपकी मदद कर सकती हूँ। आप मुझसे कुछ भी पूछ सकते हैं।";
+
+if(language==="English"){
+text="Hello! I am your SY AI Assistant. I am happy to help you.";
 }
 
-speakText(test);
+if(language==="Hinglish"){
+text="Namaste! Main aapki SY AI Assistant hoon. Main aapki madad kar sakti hoon.";
+}
+
+speakText(text);
 };
 
 // CHAT DISPLAY
+
 function addMessage(text,role,save=true){
+
 const wrap=document.createElement("div");
 wrap.className="msg "+role;
 
@@ -349,6 +347,7 @@ body.textContent=text;
 wrap.appendChild(body);
 
 if(role==="ai"){
+
 const tools=document.createElement("div");
 tools.className="msg-tools";
 
@@ -364,58 +363,76 @@ wrap.appendChild(tools);
 chat.appendChild(wrap);
 chat.scrollTop=chat.scrollHeight;
 
-if(save)currentMessages.push({role,text});
+if(save){
+currentMessages.push({role,text});
+persistCurrent();
+}
 
 return wrap;
 }
 
 function renderMessages(messages){
+
 chat.innerHTML="";
 currentMessages=[];
 
 if(!messages.length){
-addMessage("नमस्ते! मैं SY AI हूँ। मैं आपकी मदद कर सकती हूँ। आप क्या पूछना चाहते हैं?","ai");
+addMessage(
+"नमस्ते! मैं SY AI हूँ। मैं आपकी मदद कर सकती हूँ। आप क्या पूछना चाहते हैं?",
+"ai"
+);
 return;
 }
 
 messages.forEach(m=>addMessage(m.text,m.role));
+persistCurrent();
 }
 
 // SEND MESSAGE
+
 async function sendMessage(){
+
 const message=input.value.trim();
 
 if(!message&&!selectedImage)return;
 
-addMessage(message||"Please describe this image.","user");
+const imageForRequest=selectedImage;
+
+addMessage(
+message||"Please describe this image.",
+"user"
+);
 
 input.value="";
 $("sendBtn").disabled=true;
 
 setStatus("● AI is thinking...");
 
-const pending=addMessage("SY AI सोच रही है...","ai",false);
+const pending=addMessage(
+"SY AI सोच रही है...",
+"ai",
+false
+);
 
 try{
+
 const payload={
 message:message,
 language:$("language").value,
 provider:$("provider").value,
-
-// Female assistant instruction
 systemInstruction:FEMALE_INSTRUCTION,
-
-// Previous messages only, excluding current user message
 history:currentMessages.slice(0,-1).slice(-12)
 };
 
-if(selectedImage){
-payload.image=selectedImage;
+if(imageForRequest){
+payload.image=imageForRequest;
 }
 
 const response=await fetch(API_URL,{
 method:"POST",
-headers:{"Content-Type":"application/json"},
+headers:{
+"Content-Type":"application/json"
+},
 body:JSON.stringify(payload)
 });
 
@@ -425,59 +442,78 @@ if(!response.ok){
 throw new Error(data.error||"API Error");
 }
 
-const answer=data.reply||"मुझे जवाब नहीं मिला।";
+const answer=data.reply||"माफ कीजिए, मैं जवाब नहीं दे पाई।";
 
 pending.remove();
 
 addMessage(answer,"ai");
 
 setStatus("● AI Connected");
-persistCurrent();
 
 if($("autoSpeak").value==="on"){
 speakText(answer);
 }
 
 }catch(error){
+
 pending.remove();
+
 addMessage("Error: "+error.message,"error");
+
 setStatus("● Connection Error");
 
 }finally{
+
 $("sendBtn").disabled=false;
+
 selectedImage=null;
 $("imageInput").value="";
 $("preview").style.display="none";
+
 chat.scrollTop=chat.scrollHeight;
+
 }
 }
 
 // CHAT STORAGE
+
 function persistCurrent(){
-localStorage.setItem("sy_ai_current",JSON.stringify(currentMessages));
+localStorage.setItem(
+"sy_ai_current",
+JSON.stringify(currentMessages)
+);
 }
 
 function saveChat(){
+
 if(!currentMessages.length)return;
 
-const title=(currentMessages.find(m=>m.role==="user")?.text||"New Chat").slice(0,40);
+const title=(
+currentMessages.find(m=>m.role==="user")?.text||"New Chat"
+).slice(0,40);
 
 savedChats.unshift({
 id:Date.now(),
 title,
-messages:currentMessages
+messages:[...currentMessages]
 });
 
 savedChats=savedChats.slice(0,40);
 
-localStorage.setItem("sy_ai_chats",JSON.stringify(savedChats));
+localStorage.setItem(
+"sy_ai_chats",
+JSON.stringify(savedChats)
+);
+
 renderHistory();
 }
 
 function renderHistory(){
+
 $("historyList").innerHTML="";
 
 savedChats.forEach(item=>{
+
 const row=document.createElement("div");
 row.className="history-item";
 
@@ -486,8 +522,8 @@ open.className="secondary";
 open.textContent=item.title;
 
 open.onclick=()=>{
+stopAudio();
 renderMessages(item.messages);
-persistCurrent();
 };
 
 const del=document.createElement("button");
@@ -495,34 +531,51 @@ del.className="danger";
 del.textContent="×";
 
 del.onclick=()=>{
-savedChats=savedChats.filter(x=>x.id!==item.id);
-localStorage.setItem("sy_ai_chats",JSON.stringify(savedChats));
+
+savedChats=savedChats.filter(
+x=>x.id!==item.id
+);
+
+localStorage.setItem(
+"sy_ai_chats",
+JSON.stringify(savedChats)
+);
+
 renderHistory();
+
 };
 
 row.append(open,del);
 $("historyList").appendChild(row);
+
 });
 }
 
 function newChat(){
+
 saveChat();
+stopAudio();
 renderMessages([]);
 persistCurrent();
+
 }
 
 function clearAll(){
+
 if(!confirm("Delete all saved history?"))return;
 
 savedChats=[];
+
 localStorage.removeItem("sy_ai_chats");
 localStorage.removeItem("sy_ai_current");
 
 renderHistory();
 renderMessages([]);
+
 }
 
 function exportChat(){
+
 const blob=new Blob([
 currentMessages.map(m=>m.role+": "+m.text).join("\n\n")
 ],{type:"text/plain"});
@@ -531,106 +584,155 @@ const a=document.createElement("a");
 a.href=URL.createObjectURL(blob);
 a.download="SY-AI-Chat.txt";
 a.click();
+
 URL.revokeObjectURL(a.href);
 }
 
 // VOICE INPUT
+
 function startListening(){
+
 if(!recognition||isListening||!handsFree)return;
 
 try{
-recognition.lang=$("language").value==="English"?"en-IN":"hi-IN";
+
+recognition.lang=
+$("language").value==="English"?"en-IN":"hi-IN";
+
 recognition.start();
+
 }catch(e){}
+
 }
 
 function stopAll(){
+
 handsFree=false;
+
 $("handsFreeBtn").textContent="Hands-free OFF";
 
 if(recognition&&isListening){
 try{recognition.stop()}catch(e){}
 }
 
-if("speechSynthesis"in window){
-speechSynthesis.cancel();
-}
+stopAudio();
 
 $("voiceStatus").textContent="Voice stopped";
+
 }
 
 if(SpeechRecognition){
+
 recognition=new SpeechRecognition();
+
 recognition.continuous=false;
 recognition.interimResults=false;
 
 recognition.onstart=()=>{
+
 isListening=true;
 $("micBtn").textContent="🔴 सुन रहा हूँ";
+
 };
 
 recognition.onend=()=>{
+
 isListening=false;
 $("micBtn").textContent="🎤 बोलें";
+
 };
 
 recognition.onresult=e=>{
+
 input.value=e.results[0][0].transcript;
-if(handsFree)sendMessage();
+
+if(handsFree){
+sendMessage();
+}
+
 };
 
 recognition.onerror=e=>{
+
 $("voiceStatus").textContent="Mic error: "+e.error;
 isListening=false;
+
 };
 
 }else{
+
 $("micBtn").disabled=true;
 $("voiceStatus").textContent="Speech recognition supported nahi hai.";
+
 }
 
 $("micBtn").onclick=()=>{
+
 if(!recognition)return;
 
 try{
-recognition.lang=$("language").value==="English"?"en-IN":"hi-IN";
+
+recognition.lang=
+$("language").value==="English"?"en-IN":"hi-IN";
+
 recognition.start();
+
 }catch(e){
+
 $("voiceStatus").textContent="Microphone busy";
+
 }
+
 };
 
 $("handsFreeBtn").onclick=()=>{
-handsFree=!handsFree;
-$("handsFreeBtn").textContent="Hands-free "+(handsFree?"ON":"OFF");
 
-if(handsFree)startListening();
-else if(recognition&&isListening)recognition.stop();
+handsFree=!handsFree;
+
+$("handsFreeBtn").textContent=
+"Hands-free "+(handsFree?"ON":"OFF");
+
+if(handsFree){
+startListening();
+}else if(recognition&&isListening){
+recognition.stop();
+}
+
 };
 
 // IMAGE UPLOAD
+
 $("imageInput").onchange=e=>{
+
 const file=e.target.files[0];
+
 if(!file)return;
 
 if(file.size>4*1024*1024){
+
 alert("Image 4 MB se chhoti rakhein.");
 e.target.value="";
 return;
+
 }
 
 const reader=new FileReader();
 
 reader.onload=()=>{
+
 selectedImage=reader.result.split(",")[1];
+
 $("preview").src=reader.result;
 $("preview").style.display="block";
+
 };
 
 reader.readAsDataURL(file);
+
 };
 
 // BUTTON EVENTS
+
 $("sendBtn").onclick=sendMessage;
 $("stopBtn").onclick=stopAll;
 $("saveChatBtn").onclick=saveChat;
@@ -639,39 +741,64 @@ $("clearAllBtn").onclick=clearAll;
 $("exportBtn").onclick=exportChat;
 
 $("themeBtn").onclick=()=>{
+
 document.body.style.background=
-document.body.style.background==="white"?"#101322":"white";
+document.body.style.background==="white"
+?"#101322"
+:"white";
+
 };
 
 $("instagramInfo").onclick=()=>{
-alert("Instagram API setup ke liye Meta Developer approval, permissions aur access token chahiye.");
+
+alert(
+"Instagram API setup ke liye Meta Developer approval, permissions aur access token chahiye."
+);
+
 };
 
 document.querySelectorAll(".quick").forEach(button=>{
+
 button.onclick=()=>{
+
 input.value=button.dataset.prompt;
 input.focus();
+
 };
+
 });
 
 input.addEventListener("keydown",e=>{
+
 if(e.key==="Enter"&&!e.shiftKey){
+
 e.preventDefault();
 sendMessage();
+
 }
+
 });
 
 // LOAD SAVED CHAT
+
 try{
-const saved=JSON.parse(localStorage.getItem("sy_ai_current")||"[]");
+
+const saved=JSON.parse(
+localStorage.getItem("sy_ai_current")||"[]"
+);
+
 renderMessages(saved);
+
 }catch(e){
+
 renderMessages([]);
+
 }
 
 renderHistory();
 
 // BACKEND STATUS
+
 fetch(API_URL)
 .then(r=>r.text())
 .then(t=>setStatus("● Backend: "+t))
