@@ -1,481 +1,432 @@
-
 <!DOCTYPE html>
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#101322">
-<title>SY AI Assistant</title>
-
+<title>SY AI Assistant Ultimate</title>
 <style>
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  background: #101322;
-  color: white;
-  font-family: Arial, sans-serif;
-}
-
-header {
-  padding: 20px;
-  background: #191e35;
-  border-bottom: 1px solid #303953;
-  text-align: center;
-}
-
-header h2 { margin: 0; color: #8c9cff; }
-header small { color: #aaa; }
-
-.container {
-  max-width: 750px;
-  margin: 25px auto;
-  padding: 15px;
-}
-
-.card {
-  background: #1b2138;
-  padding: 18px;
-  border-radius: 15px;
-  margin-bottom: 15px;
-  border: 1px solid #303953;
-}
-
-h3 { margin-top: 0; color: #aabaff; }
-
-label {
-  display: block;
-  margin: 12px 0 7px;
-  color: #bbb;
-  font-size: 14px;
-}
-
-select, textarea {
-  width: 100%;
-  padding: 13px;
-  background: #292f49;
-  color: white;
-  border: 1px solid #46516a;
-  border-radius: 9px;
-  font-size: 15px;
-  outline: none;
-}
-
-textarea { min-height: 85px; resize: vertical; }
-
-button {
-  padding: 13px 18px;
-  border: 0;
-  border-radius: 9px;
-  background: #687cff;
-  color: white;
-  font-size: 15px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-button:disabled { opacity: .55; cursor: not-allowed; }
-button.secondary { background: #303953; }
-button.danger { background: #a53c50; }
-
-#chat {
-  height: 390px;
-  overflow-y: auto;
-  padding: 12px;
-  background: #131a2b;
-  border-radius: 10px;
-  margin-bottom: 12px;
-}
-
-.msg {
-  padding: 12px;
-  margin: 10px 0;
-  border-radius: 10px;
-  background: #303953;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  line-height: 1.5;
-}
-
-.msg.user {
-  background: #465a9a;
-  margin-left: 25px;
-}
-
-.msg.ai {
-  background: #263b55;
-  margin-right: 25px;
-}
-
-.msg.error { background: #642e3a; }
-
-.speak-btn {
-  display: block;
-  margin-top: 12px;
-  padding: 8px 13px;
-  background: #465da8;
-  border: 1px solid #7186d8;
-  border-radius: 8px;
-  font-size: 14px;
-}
-
-.status { color: #aaa; font-size: 13px; margin-top: 10px; }
-
-.actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 10px;
-}
-
-.actions button { flex: 1; }
-
-.voice-row {
-  display: flex;
-  gap: 10px;
-  margin-top: 8px;
-}
-
-.voice-row button { min-width: 75px; }
-
-footer {
-  text-align: center;
-  padding: 25px;
-  color: #888;
-  font-size: 13px;
-}
-
-@media(max-width:500px) {
-  .container { padding: 10px; margin: 12px auto; }
-  #chat { height: 45vh; min-height: 260px; }
-  header { padding: 17px; }
-}
+:root{color-scheme:dark;--bg:#101322;--panel:#1b2138;--panel2:#131a2b;--line:#303953;--text:#fff;--muted:#aaa;--accent:#687cff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
+header{padding:17px;background:#191e35;border-bottom:1px solid var(--line);text-align:center}
+header h2{margin:0;color:#9aaaff}
+header small{color:var(--muted)}
+.container{max-width:900px;margin:18px auto;padding:12px}
+.card{background:var(--panel);padding:16px;border-radius:14px;margin-bottom:14px;border:1px solid var(--line)}
+h3{margin:0 0 12px;color:#b5c1ff}
+label{display:block;margin:12px 0 6px;color:#c5c8d3;font-size:14px}
+select,textarea,input{width:100%;padding:12px;background:#292f49;color:white;border:1px solid #46516a;border-radius:9px;font-size:15px}
+textarea{min-height:82px;resize:vertical}
+button{padding:11px 14px;border:0;border-radius:9px;background:var(--accent);color:white;font-weight:bold;font-size:14px;cursor:pointer}
+button:disabled{opacity:.5;cursor:not-allowed}
+.secondary{background:#303953}
+.danger{background:#9b3c50}
+.row{display:flex;gap:9px;flex-wrap:wrap}
+.row>*{flex:1;min-width:110px}
+#chat{height:48vh;min-height:300px;max-height:650px;overflow:auto;padding:10px;background:var(--panel2);border-radius:10px;margin-bottom:10px}
+.msg{padding:12px;margin:9px 0;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;background:#303953}
+.msg.user{background:#465a9a;margin-left:18px}
+.msg.ai{background:#263b55;margin-right:12px}
+.msg.error{background:#642e3a}
+.msg-tools{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+.msg-tools button{padding:7px 10px;font-size:12px}
+.status{color:var(--muted);font-size:13px;margin:8px 0}
+.hint{font-size:12px;color:#aeb4c8;line-height:1.5}
+#historyList{display:grid;gap:7px;max-height:220px;overflow:auto}
+.history-item{display:flex;gap:7px;align-items:center}
+.history-item button:first-child{flex:1;text-align:left}
+#preview{max-width:100%;max-height:180px;display:none;margin-top:8px;border-radius:8px}
+footer{text-align:center;padding:20px;color:#888;font-size:12px}
+body.light{--bg:#f1f3fa;--panel:#fff;--panel2:#e8ebf5;--line:#ccd2e2;--text:#172039;--muted:#596174;color:var(--text);color-scheme:light}
+body.light select,body.light textarea,body.light input{background:#fff;color:#172039}
+@media(max-width:520px){.container{padding:8px;margin:8px auto}.card{padding:12px}#chat{height:43vh;min-height:260px}}
 </style>
 </head>
-
 <body>
-
 <header>
-  <h2>SY AI ASSISTANT</h2>
-  <small>GPT + Gemini Personal AI</small>
+<h2>SY AI ASSISTANT</h2>
+<small>Personal AI • Gemini + GPT • Voice</small>
 </header>
 
 <main class="container">
+<section class="card">
+<h3>AI Settings</h3>
+<div class="row">
+<div>
+<label for="provider">AI Model</label>
+<select id="provider">
+<option value="gemini">Google Gemini</option>
+<option value="openai">OpenAI GPT</option>
+</select>
+</div>
+<div>
+<label for="language">Language</label>
+<select id="language">
+<option value="Hindi">Hindi</option>
+<option value="English">English</option>
+<option value="Hinglish">Hinglish</option>
+</select>
+</div>
+</div>
+<div class="row">
+<div>
+<label for="voiceRate">Voice speed</label>
+<select id="voiceRate">
+<option value="0.85">Slow</option>
+<option value="1" selected>Normal</option>
+<option value="1.15">Fast</option>
+</select>
+</div>
+<div>
+<label for="autoSpeak">Voice reply</label>
+<select id="autoSpeak">
+<option value="on">Auto speak ON</option>
+<option value="off">Manual only</option>
+</select>
+</div>
+</div>
+<div class="row" style="margin-top:10px">
+<button class="secondary" id="themeBtn">Light / Dark</button>
+<button class="secondary" id="newChatBtn">New Chat</button>
+</div>
+<p class="status" id="connection">● Backend not checked</p>
+<p class="hint">GPT के लिए Cloudflare में OPENAI_API_KEY Secret जरूरी है। API keys इस वेबसाइट में न डालें।</p>
+</section>
 
-  <section class="card">
-    <h3>AI Settings</h3>
+<section class="card">
+<h3>Chat History</h3>
+<div class="row">
+<button class="secondary" id="saveChatBtn">Save current chat</button>
+<button class="danger" id="clearAllBtn">Delete all history</button>
+</div>
+<div id="historyList" style="margin-top:10px"></div>
+</section>
 
-    <label for="model">Select AI Model</label>
-    <select id="model">
-      <option value="gemini">Google Gemini 2.5 Flash</option>
-      <option value="gpt" disabled>OpenAI GPT (Coming Soon)</option>
-    </select>
+<section class="card">
+<h3>AI Chat</h3>
+<div id="chat" aria-live="polite"></div>
+<label for="question">Message</label>
+<textarea id="question" placeholder="अपना सवाल लिखो या माइक से बोलो..."></textarea>
+<div class="row" style="margin-top:8px">
+<button id="micBtn" class="secondary">🎤 बोलें</button>
+<button id="stopBtn" class="danger">⏹ Stop</button>
+<button id="sendBtn">Send</button>
+</div>
+<label for="imageInput">Image (optional)</label>
+<input type="file" id="imageInput" accept="image/*">
+<img id="preview" alt="Selected image preview">
+<div class="row" style="margin-top:9px">
+<button class="secondary" id="handsFreeBtn">Hands-free: OFF</button>
+<button class="secondary" id="exportBtn">Export chat</button>
+</div>
+<p class="status" id="voiceStatus">Voice ready</p>
+</section>
 
-    <label for="language">Select Language</label>
-    <select id="language">
-      <option value="Hindi">Hindi</option>
-      <option value="English">English</option>
-      <option value="Hinglish">Hinglish</option>
-    </select>
+<section class="card">
+<h3>Quick AI Tools</h3>
+<div class="row">
+<button class="secondary quick" data-prompt="इस टेक्स्ट को हिंदी में अनुवाद करो: ">Translate</button>
+<button class="secondary quick" data-prompt="इसका छोटा सारांश बनाओ: ">Summarize</button>
+<button class="secondary quick" data-prompt="इस संदेश को प्रोफेशनल ईमेल में लिखो: ">Write email</button>
+<button class="secondary quick" data-prompt="इस कोड को समझाओ और सुधारो: ">Help with code</button>
+</div>
+<p class="hint">बटन दबाकर टेक्स्ट लिखो, फिर Send करो।</p>
+</section>
 
-    <p class="status" id="connection">● Gemini Backend Ready</p>
-  </section>
-
-  <section class="card">
-    <h3>AI Chat</h3>
-
-    <div id="chat" aria-live="polite"></div>
-
-    <label for="question">Your Message</label>
-    <textarea id="question" placeholder="Apna message likho..."></textarea>
-
-    <div class="voice-row">
-      <button id="micBtn" type="button" class="secondary">🎤 बोलें</button>
-      <button id="stopVoiceBtn" type="button" class="danger">⏹ आवाज़ बंद</button>
-    </div>
-
-    <p class="status" id="voiceStatus">Voice ready</p>
-
-    <div class="actions">
-      <button id="sendBtn" onclick="sendMessage()">Send Message</button>
-      <button class="secondary" onclick="clearChat()">Clear Chat</button>
-    </div>
-  </section>
-
-  <section class="card">
-    <h3>Instagram Automation</h3>
-    <p id="status" class="status">Instagram: Not Connected</p>
-    <button class="secondary" onclick="instagramSetup()">Connect Instagram</button>
-  </section>
-
+<section class="card">
+<h3>Instagram Automation</h3>
+<p class="status">Instagram: Meta setup pending</p>
+<p class="hint">Instagram DM, comments और insights के लिए Meta app, permissions, webhook और access token चाहिए। Arbitrary posts को auto-like करना supported नहीं है। संवेदनशील संदेशों के लिए human approval रखें।</p>
+<button class="secondary" id="instagramInfo">Instagram setup information</button>
+</section>
 </main>
 
-<footer>
-  © 2026 SY AI Assistant | Powered by Gemini
-</footer>
+<footer>© 2026 SY AI Assistant Ultimate</footer>
 
 <script>
-const API_URL =
-  "https://sy-ai-backend.sanjaysinghpatel307.workers.dev";
+const API_URL="https://sy-ai-backend.sanjaysinghpatel307.workers.dev";
+const $=id=>document.getElementById(id);
+const chat=$("chat"),input=$("question"),sendBtn=$("sendBtn");
+let currentMessages=[];
+let savedChats=JSON.parse(localStorage.getItem("sy_ai_chats")||"[]");
+let selectedImage=null,handsFree=false,isListening=false,recognition=null;
 
-const chat = document.getElementById("chat");
-const input = document.getElementById("question");
-const sendBtn = document.getElementById("sendBtn");
-const language = document.getElementById("language");
-const model = document.getElementById("model");
-const connection = document.getElementById("connection");
-const micBtn = document.getElementById("micBtn");
-const stopVoiceBtn = document.getElementById("stopVoiceBtn");
-const voiceStatus = document.getElementById("voiceStatus");
+const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
 
-function getSpeechLanguage() {
-  if (language.value === "English") return "en-IN";
-  return "hi-IN";
+function setStatus(t){$("connection").textContent=t}
+function speechLang(){return $("language").value==="English"?"en-IN":"hi-IN"}
+
+function addMessage(text,role,save=true){
+const wrap=document.createElement("div");
+wrap.className="msg "+role;
+const body=document.createElement("div");
+body.textContent=text;
+wrap.appendChild(body);
+
+if(role==="ai"){
+const tools=document.createElement("div");
+tools.className="msg-tools";
+const speak=document.createElement("button");
+speak.className="secondary";
+speak.textContent="🔊 सुनें";
+speak.onclick=()=>speakText(text);
+tools.appendChild(speak);
+wrap.appendChild(tools);
+}
+chat.appendChild(wrap);
+chat.scrollTop=chat.scrollHeight;
+if(save)currentMessages.push({role,text});
+return wrap;
 }
 
-function speakText(text) {
-  if (!("speechSynthesis" in window)) {
-    voiceStatus.textContent = "Voice playback is not supported.";
-    return;
-  }
-
-  window.speechSynthesis.cancel();
-
-  const speech = new SpeechSynthesisUtterance(text);
-  speech.lang = getSpeechLanguage();
-  speech.rate = 0.9;
-  speech.pitch = 1;
-
-  speech.onstart = () => {
-    voiceStatus.textContent = "🔊 SY AI बोल रहा है...";
-  };
-
-  speech.onend = () => {
-    voiceStatus.textContent = "Voice ready";
-  };
-
-  speech.onerror = () => {
-    voiceStatus.textContent = "आवाज़ नहीं चल पाई। सुनें बटन दबाएँ।";
-  };
-
-  window.speechSynthesis.speak(speech);
+function speakText(text){
+if(!("speechSynthesis"in window)){
+$("voiceStatus").textContent="Voice playback supported नहीं है";
+return;
+}
+speechSynthesis.cancel();
+const u=new SpeechSynthesisUtterance(text);
+u.lang=speechLang();
+u.rate=Number($("voiceRate").value)||1;
+u.onstart=()=>{$("voiceStatus").textContent="🔊 SY AI बोल रहा है..."};
+u.onend=()=>{$("voiceStatus").textContent="Voice ready";if(handsFree)startListening()};
+u.onerror=()=>{$("voiceStatus").textContent="आवाज़ नहीं चली। सुनें बटन दबाएँ।"};
+speechSynthesis.speak(u);
 }
 
-function addSpeakButton(div) {
-  if (div.querySelector(".speak-btn")) return;
-
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = "speak-btn";
-  btn.textContent = "🔊 सुनें";
-
-  btn.onclick = () => {
-    const text = div.dataset.messageText || "";
-    speakText(text);
-  };
-
-  div.appendChild(btn);
+function renderMessages(messages){
+chat.innerHTML="";
+currentMessages=[];
+if(!messages.length){
+addMessage("नमस्ते! मैं SY AI हूँ। आप क्या पूछना चाहते हैं?","ai");
+return;
+}
+messages.forEach(m=>addMessage(m.text,m.role));
 }
 
-function addMessage(text, type) {
-  const div = document.createElement("div");
-  div.className = "msg " + type;
-  div.dataset.messageText = text;
-  div.textContent = text;
+async function sendMessage(){
+const message=input.value.trim();
+if(!message&&!selectedImage)return;
+const provider=$("provider").value;
+addMessage(message||"Please describe this image.","user");
+input.value="";
+sendBtn.disabled=true;
+setStatus("● AI is thinking...");
+const pending=addMessage("SY AI सोच रहा है...","ai",false);
 
-  if (type === "ai") addSpeakButton(div);
+try{
+const payload={
+message,
+language:$("language").value,
+provider,
+history:currentMessages.slice(-12).filter(x=>x.role!=="error")
+};
+if(selectedImage)payload.image=selectedImage;
 
-  chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
+const response=await fetch(API_URL,{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify(payload)
+});
+const data=await response.json();
+if(!response.ok)throw new Error(data.error||"Backend error");
 
-  return div;
+const answer=data.reply||"No reply received";
+pending.remove();
+currentMessages.push({role:"ai",text:answer});
+addMessage(answer,"ai",false);
+setStatus("● "+provider+" connected");
+persistCurrent();
+if($("autoSpeak").value==="on")speakText(answer);
+
+}catch(e){
+pending.remove();
+addMessage("Error: "+e.message,"error");
+setStatus("● Connection error");
+}finally{
+sendBtn.disabled=false;
+selectedImage=null;
+$("imageInput").value="";
+$("preview").style.display="none";
+chat.scrollTop=chat.scrollHeight;
+}
 }
 
-async function sendMessage() {
-  const message = input.value.trim();
-
-  if (!message) {
-    input.focus();
-    return;
-  }
-
-  if (model.value === "gpt") {
-    addMessage("OpenAI GPT connection abhi setup nahi hua hai.", "error");
-    return;
-  }
-
-  addMessage("You: " + message, "user");
-
-  input.value = "";
-  sendBtn.disabled = true;
-  connection.textContent = "● Gemini is thinking...";
-
-  const reply = addMessage("SY AI soch raha hai...", "ai");
-
-  try {
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message: message,
-        language: language.value
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || "API Error");
-    }
-
-    const answer = data.reply || "No reply received";
-
-    reply.dataset.messageText = answer;
-    reply.textContent = answer;
-    addSpeakButton(reply);
-
-    connection.textContent = "● Gemini Connected";
-    saveHistory();
-
-    // Try automatic voice reply.
-    // If mobile blocks automatic playback, tap the 🔊 सुनें button.
-    speakText(answer);
-
-  } catch (error) {
-    reply.className = "msg error";
-    reply.textContent = "Error: " + error.message;
-    connection.textContent = "● Connection Error";
-    saveHistory();
-
-  } finally {
-    sendBtn.disabled = false;
-    chat.scrollTop = chat.scrollHeight;
-    input.focus();
-  }
+function persistCurrent(){
+localStorage.setItem("sy_ai_current",JSON.stringify(currentMessages));
 }
 
-function saveHistory() {
-  try {
-    const messages = Array.from(chat.querySelectorAll(".msg")).map(item => ({
-      text: item.dataset.messageText || item.textContent,
-      type: item.classList.contains("user") ? "user" :
-            item.classList.contains("error") ? "error" : "ai"
-    }));
-
-    localStorage.setItem("sy_ai_history", JSON.stringify(messages));
-  } catch (error) {
-    console.log("History save error", error);
-  }
+function saveChat(){
+if(!currentMessages.length)return;
+const title=(currentMessages.find(m=>m.role==="user")?.text||"New Chat").slice(0,45);
+savedChats.unshift({id:Date.now(),title,messages:currentMessages});
+savedChats=savedChats.slice(0,40);
+localStorage.setItem("sy_ai_chats",JSON.stringify(savedChats));
+renderHistory();
 }
 
-function loadHistory() {
-  try {
-    const history = JSON.parse(
-      localStorage.getItem("sy_ai_history") || "[]"
-    );
-
-    if (history.length) {
-      chat.innerHTML = "";
-      history.forEach(item => addMessage(item.text, item.type));
-    } else {
-      addMessage(
-        "Namaste! Main SY AI hoon. Aap kya poochna chahte hain?",
-        "ai"
-      );
-    }
-  } catch (error) {
-    console.log("History load error", error);
-    addMessage("Namaste! Main SY AI hoon.", "ai");
-  }
+function renderHistory(){
+$("historyList").innerHTML="";
+savedChats.forEach(item=>{
+const row=document.createElement("div");
+row.className="history-item";
+const open=document.createElement("button");
+open.className="secondary";
+open.textContent=item.title;
+open.onclick=()=>{
+renderMessages(item.messages);
+persistCurrent();
+};
+const del=document.createElement("button");
+del.className="danger";
+del.textContent="×";
+del.onclick=()=>{
+savedChats=savedChats.filter(x=>x.id!==item.id);
+localStorage.setItem("sy_ai_chats",JSON.stringify(savedChats));
+renderHistory();
+};
+row.append(open,del);
+$("historyList").appendChild(row);
+});
 }
 
-function clearChat() {
-  if (!confirm("Clear all chat messages?")) return;
-
-  chat.innerHTML = "";
-  addMessage(
-    "Namaste! Main SY AI hoon. Aap kya poochna chahte hain?",
-    "ai"
-  );
-
-  localStorage.removeItem("sy_ai_history");
-
-  if ("speechSynthesis" in window) {
-    window.speechSynthesis.cancel();
-  }
+function newChat(){
+saveChat();
+renderMessages([]);
+persistCurrent();
 }
 
-function instagramSetup() {
-  alert("Instagram API connection abhi setup hona baki hai.");
+function clearAll(){
+if(!confirm("सारी saved chat history delete करनी है?"))return;
+savedChats=[];
+localStorage.removeItem("sy_ai_chats");
+localStorage.removeItem("sy_ai_current");
+renderHistory();
+renderMessages([]);
 }
 
-// Voice input
-const SpeechRecognition =
-  window.SpeechRecognition || window.webkitSpeechRecognition;
-
-let recognition = null;
-
-if (SpeechRecognition) {
-  recognition = new SpeechRecognition();
-  recognition.continuous = false;
-  recognition.interimResults = false;
-
-  micBtn.addEventListener("click", () => {
-    recognition.lang = getSpeechLanguage();
-
-    try {
-      recognition.start();
-    } catch (error) {
-      voiceStatus.textContent = "Microphone already active. Please wait.";
-    }
-  });
-
-  recognition.onstart = () => {
-    micBtn.textContent = "🔴 सुन रहा हूँ";
-    voiceStatus.textContent = "बोलिए, SY AI सुन रहा है...";
-  };
-
-  recognition.onresult = (event) => {
-    input.value = event.results[0][0].transcript;
-    voiceStatus.textContent = "आपकी आवाज़ टेक्स्ट में बदल गई।";
-    input.focus();
-  };
-
-  recognition.onerror = (event) => {
-    voiceStatus.textContent = "Voice error: " + event.error;
-    micBtn.textContent = "🎤 बोलें";
-  };
-
-  recognition.onend = () => {
-    micBtn.textContent = "🎤 बोलें";
-  };
-
-} else {
-  micBtn.disabled = true;
-  voiceStatus.textContent = "इस browser में Voice Input supported नहीं है।";
+function exportChat(){
+const blob=new Blob([
+currentMessages.map(m=>m.role.toUpperCase()+": "+m.text).join("\n\n")
+],{type:"text/plain"});
+const a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="sy-ai-chat.txt";
+a.click();
+URL.revokeObjectURL(a.href);
 }
 
-stopVoiceBtn.addEventListener("click", () => {
-  if (recognition) {
-    try { recognition.stop(); } catch (error) {}
-  }
+function startListening(){
+if(!recognition||isListening||!handsFree)return;
+try{recognition.lang=speechLang();recognition.start()}catch(e){}
+}
 
-  if ("speechSynthesis" in window) {
-    window.speechSynthesis.cancel();
-  }
+function stopAll(){
+handsFree=false;
+$("handsFreeBtn").textContent="Hands-free: OFF";
+if(recognition&&isListening){try{recognition.stop()}catch(e){}}
+if("speechSynthesis"in window)speechSynthesis.cancel();
+$("voiceStatus").textContent="Voice stopped.";
+}
 
-  voiceStatus.textContent = "आवाज़ बंद कर दी गई।";
+if(SpeechRecognition){
+recognition=new SpeechRecognition();
+recognition.continuous=false;
+recognition.interimResults=false;
+recognition.onstart=()=>{
+isListening=true;
+$("micBtn").textContent="🔴 सुन रहा हूँ";
+$("voiceStatus").textContent="बोलिए...";
+};
+recognition.onend=()=>{
+isListening=false;
+$("micBtn").textContent="🎤 बोलें";
+};
+recognition.onresult=e=>{
+input.value=e.results[0][0].transcript;
+if(handsFree)sendMessage();
+};
+recognition.onerror=e=>{
+$("voiceStatus").textContent="Mic error: "+e.error;
+isListening=false;
+};
+}else{
+$("micBtn").disabled=true;
+$("voiceStatus").textContent="इस browser में voice recognition supported नहीं है।";
+}
+
+$("micBtn").onclick=()=>{
+if(!recognition)return;
+try{recognition.lang=speechLang();recognition.start()}
+catch(e){$("voiceStatus").textContent="Microphone busy. फिर कोशिश करें।"}
+};
+$("stopBtn").onclick=stopAll;
+
+$("handsFreeBtn").onclick=()=>{
+handsFree=!handsFree;
+$("handsFreeBtn").textContent="Hands-free: "+(handsFree?"ON":"OFF");
+if(handsFree)startListening();
+else if(recognition&&isListening)recognition.stop();
+};
+
+$("sendBtn").onclick=sendMessage;
+input.addEventListener("keydown",e=>{
+if(e.key==="Enter"&&!e.shiftKey){
+e.preventDefault();
+sendMessage();
+}
 });
 
-input.addEventListener("keydown", function(event) {
-  if (event.key === "Enter" && !event.shiftKey) {
-    event.preventDefault();
-    sendMessage();
-  }
+$("saveChatBtn").onclick=saveChat;
+$("newChatBtn").onclick=newChat;
+$("clearAllBtn").onclick=clearAll;
+$("exportBtn").onclick=exportChat;
+$("themeBtn").onclick=()=>document.body.classList.toggle("light");
+
+$("imageInput").onchange=e=>{
+const file=e.target.files[0];
+if(!file)return;
+if(file.size>4*1024*1024){
+alert("Image 4 MB से छोटी रखें।");
+e.target.value="";
+return;
+}
+const reader=new FileReader();
+reader.onload=()=>{
+selectedImage=reader.result.split(",")[1];
+$("preview").src=reader.result;
+$("preview").style.display="block";
+};
+reader.readAsDataURL(file);
+};
+
+document.querySelectorAll(".quick").forEach(b=>{
+b.onclick=()=>{
+input.value=b.dataset.prompt;
+input.focus();
+};
 });
 
-loadHistory();
+$("instagramInfo").onclick=()=>{
+alert("Instagram के लिए Meta Developer App, approved permissions, webhook और access token configure करना होगा।");
+};
+
+$("provider").onchange=()=>{
+if($("provider").value==="openai")
+setStatus("● GPT के लिए Worker में OPENAI_API_KEY Secret चाहिए।");
+else setStatus("● Gemini selected");
+};
+
+try{
+const saved=JSON.parse(localStorage.getItem("sy_ai_current")||"[]");
+renderMessages(saved);
+}catch(e){renderMessages([])}
+
+renderHistory();
+fetch(API_URL).then(r=>r.text())
+.then(t=>setStatus("● Backend: "+t))
+.catch(()=>setStatus("● Backend check failed"));
 </script>
-
 </body>
 </html>
